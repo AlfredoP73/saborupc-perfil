@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Contrato - Perfil</title>
+  <style>
+    body { font-family: sans-serif; }
+    .pass { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body>
+  <h1>Prueba de Contrato: Perfil</h1>
+  <ul id="resultados"></ul>
+  <div id="test-root"></div>
+
+  <script src="perfil.js"></script>
+  <script>
+    function test() {
+      const res = document.getElementById('resultados');
+      function assert(cond, msg) {
+        const li = document.createElement('li');
+        li.textContent = (cond ? '✓ ' : '✗ ') + msg;
+        li.className = cond ? 'pass' : 'fail';
+        res.appendChild(li);
+        if (!cond) console.error('Fallo:', msg);
+      }
+
+      assert(customElements.get('mfe-perfil') !== undefined, 'Expone custom element mfe-perfil');
+
+      const root = document.getElementById('test-root');
+      root.innerHTML = '<mfe-perfil></mfe-perfil>';
+      const el = root.querySelector('mfe-perfil');
+      
+      assert(el.shadowRoot !== null, 'El montaje genera Shadow DOM');
+      assert(el.shadowRoot.innerHTML.includes('form'), 'El componente contiene un formulario');
+
+      let evCambio = null;
+      window.addEventListener('usuario:cambio', e => evCambio = e.detail);
+
+      const form = el.shadowRoot.querySelector('form');
+      if (form) {
+        form.dispatchEvent(new Event('submit', { cancelable: true }));
+        assert(evCambio !== null, 'Publica usuario:cambio al enviar el form');
+        if (evCambio) {
+          assert(typeof evCambio.nombre === 'string', 'El evento tiene campo nombre');
+        }
+      } else {
+        assert(false, 'No se encontró el formulario para probar el evento');
+      }
+    }
+    setTimeout(test, 100);
+  </script>
+</body>
+</html>
